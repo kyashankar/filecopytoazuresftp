@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json;
 using Renci.SshNet;
 
 namespace FileCopyToAzureSFTP.WebAPI.Controllers
@@ -67,7 +68,28 @@ namespace FileCopyToAzureSFTP.WebAPI.Controllers
 
                     sftp.Disconnect();
 
-                    return Ok(allFilesAndFolders);
+
+                    var result = new Dictionary<string, object>
+                    {
+                        { "message", "" },
+                        { "result", true },
+                        { "data", new List<Dictionary<string, string>>() }
+                    };
+
+                    // Populate the 'data' list with each file path as "role"
+                    foreach (var path1 in allFilesAndFolders)
+                    {
+                        var fileData = new Dictionary<string, string>
+                        {
+                            { "role", path1 }
+                        };
+                        ((List<Dictionary<string, string>>)result["data"]).Add(fileData);
+                    }
+                    
+                    // Convert the result object to JSON
+                    string jsonResult = JsonConvert.SerializeObject(result, Formatting.Indented);
+
+                    return Ok(jsonResult);
                 }
             }
             catch (Exception ex)
